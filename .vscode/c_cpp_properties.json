@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/**",
+                "${workspaceFolder}/../lab2sem2/include",
+                "C:/Qt/6.11.0/mingw_64/include",
+                "C:/Qt/6.11.0/mingw_64/include/QtCore",
+                "C:/Qt/6.11.0/mingw_64/include/QtGui",
+                "C:/Qt/6.11.0/mingw_64/include/QtWidgets"
+            ],
+            "defines": [],
+            "compilerPath": "C:/w64devkit/bin/g++.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

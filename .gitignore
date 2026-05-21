@@ -1,0 +1,9 @@
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.o *.obj *.a *.so *.dll *.exe *.pdb *.ilk *.exp
+*.user *.pro.user *.qws .qtc_* .creator/ .qtcreator/ *.kdev4/
+.DS_Store Thumbs.db *.log *.tmp *.swp .vscode/ .idea/

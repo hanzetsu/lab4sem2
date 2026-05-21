@@ -15,3 +15,8 @@ target_include_directories(Lab4 PRIVATE
     ${NEW_INCLUDE_PATH}
     ${OLD_INCLUDE_PATH}
 )
+add_executable(test_lazysequence tests/test_lazysequence.cpp)
+target_include_directories(test_lazysequence PRIVATE include ${OLD_INCLUDE_PATH})
+
+add_executable(test_manual tests/test_manual.cpp)
+target_include_directories(test_manual PRIVATE include ${OLD_INCLUDE_PATH})

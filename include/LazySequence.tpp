@@ -130,3 +130,79 @@ LazySequence<T, Container> LazySequence<T, Container>::Append(T item) const {
     auto gen = std::make_shared<AppendGen>(self, item);
     return LazySequence(Container<T>(), gen);
 }
+
+template<typename T, template<typename> class Container>
+LazySequence<T, Container> LazySequence<T, Container>::Prepend(T item) const {
+    struct PrependGen : Generator<T> {
+        std::shared_ptr<LazySequence<T, Container>> seq;
+        T val;
+        size_t pos = 0;
+        bool valueReturned = false;
+        PrependGen(std::shared_ptr<LazySequence<T, Container>> s, T v) : seq(s), val(v) {}
+        T GetNext() override {
+            if (!valueReturned) {
+                valueReturned = true;
+                return val;
+            }
+            try {
+                return seq->Get(Cardinal(pos++));
+            } catch (const OutOfRangeException&) {
+                throw OutOfRangeException("PrependGen: нет элементов");
+            }
+        }
+        bool HasNext() const override {
+            if (!valueReturned) return true;
+            return seq->GetSizeSequence().IsInfiniteNumber() || pos < seq->GetSizeSequence().GetSize();
+        }
+        Cardinal GetPotentialSize() const override {
+            if (seq->GetSizeSequence().IsInfiniteNumber()) return Cardinal::Omega();
+            return Cardinal(seq->GetSizeSequence().GetSize() + 1);
+        }
+        Generator<T>* Clone() const override { return new PrependGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto gen = std::make_shared<PrependGen>(self, item);
+    return LazySequence(Container<T>(), gen);
+}
+
+template<typename T, template<typename> class Container>
+LazySequence<T, Container> LazySequence<T, Container>::Concat(const LazySequence<T, Container>& other) const {
+    struct ConcatGen : Generator<T> {
+        std::shared_ptr<LazySequence<T, Container>> first;
+        std::shared_ptr<LazySequence<T, Container>> second;
+        size_t posFirst = 0;
+        size_t posSecond = 0;
+        bool firstFinished = false;
+        ConcatGen(std::shared_ptr<LazySequence<T, Container>> f, std::shared_ptr<LazySequence<T, Container>> s)
+            : first(f), second(s) {}
+        T GetNext() override {
+            if (!firstFinished) {
+                try {
+                    T val = first->Get(Cardinal(posFirst));
+                    ++posFirst;
+                    return val;
+                } catch (const OutOfRangeException&) {
+                    firstFinished = true;
+                }
+            }
+            T val = second->Get(Cardinal(posSecond));
+            ++posSecond;
+            return val;
+        }
+        bool HasNext() const override {
+            if (!firstFinished) return true;
+            return second->GetSizeSequence().IsInfiniteNumber() || posSecond < second->GetSizeSequence().GetSize();
+        }
+        Cardinal GetPotentialSize() const override {
+            auto s1 = first->GetSizeSequence();
+            auto s2 = second->GetSizeSequence();
+            if (s1.IsInfiniteNumber() || s2.IsInfiniteNumber()) return Cardinal::Omega();
+            return Cardinal(s1.GetSize() + s2.GetSize());
+        }
+        Generator<T>* Clone() const override { return new ConcatGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto otherPtr = std::make_shared<LazySequence<T, Container>>(other);
+    auto gen = std::make_shared<ConcatGen>(self, otherPtr);
+    return LazySequence(Container<T>(), gen);
+}

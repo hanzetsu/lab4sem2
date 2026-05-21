@@ -1,28 +1,31 @@
-#include <WhereGenerator.hpp>
+#include "WhereGenerator.hpp"
+#include "exceptions.hpp"
+
 template<typename T>
-WhereGenerator<T>::WhereGenerator(std::unique_ptr<Generator<T>> src,
-                                  std::function<bool(const T&)> p)
-    : source(std::move(src)), pred(std::move(p)) {}
+WhereGenerator<T>::WhereGenerator(std::shared_ptr<Generator<T>> src, std::function<bool(const T&)> p)
+    : source(src), pred(p) {}
 
 template<typename T>
 void WhereGenerator<T>::findNext() const {
-    while (source->HasNext()) {
+    while (source && source->HasNext()) {
         T val = source->GetNext();
         if (pred(val)) {
-            nextCached = val;
+            cachedNext = val;
             hasCached = true;
             return;
         }
     }
     hasCached = false;
+    cachedNext.reset();
 }
 
 template<typename T>
 T WhereGenerator<T>::GetNext() {
     if (!hasCached) findNext();
     if (!hasCached) throw OutOfRangeException("WhereGenerator: нет элементов");
-    T res = nextCached;
+    T res = *cachedNext;
     hasCached = false;
+    cachedNext.reset();
     return res;
 }
 
@@ -40,5 +43,6 @@ Cardinal WhereGenerator<T>::GetPotentialSize() const {
 
 template<typename T>
 Generator<T>* WhereGenerator<T>::Clone() const {
-    return new WhereGenerator<T>(std::unique_ptr<Generator<T>>(source->Clone()), pred);
+    auto clonedSource = source ? std::shared_ptr<Generator<T>>(source->Clone()) : nullptr;
+    return new WhereGenerator<T>(clonedSource, pred);
 }

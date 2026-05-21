@@ -206,3 +206,154 @@ LazySequence<T, Container> LazySequence<T, Container>::Concat(const LazySequence
     auto gen = std::make_shared<ConcatGen>(self, otherPtr);
     return LazySequence(Container<T>(), gen);
 }
+
+template<typename T, template<typename> class Container>
+LazySequence<T, Container> LazySequence<T, Container>::SkipFirst(size_t count) const {
+    if (count == 0) return *this;
+    Cardinal total = GetSizeSequence();
+    if (total.IsFinalNumber() && count >= total.GetSize()) return LazySequence();
+    struct SkipGen : Generator<T> {
+        std::shared_ptr<LazySequence<T, Container>> seq;
+        size_t skip;
+        size_t skipped = 0;
+        SkipGen(std::shared_ptr<LazySequence<T, Container>> s, size_t c) : seq(s), skip(c) {}
+        T GetNext() override {
+            while (skipped < skip) {
+                try { seq->Get(Cardinal(0)); } catch (...) {}
+                ++skipped;
+            }
+            return seq->Get(Cardinal(skipped++));
+        }
+        bool HasNext() const override { return true; }
+        Cardinal GetPotentialSize() const override {
+            if (seq->GetSizeSequence().IsInfiniteNumber()) return Cardinal::Omega();
+            size_t sz = seq->GetSizeSequence().GetSize();
+            if (skip >= sz) return Cardinal(0);
+            return Cardinal(sz - skip);
+        }
+        Generator<T>* Clone() const override { return new SkipGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto gen = std::make_shared<SkipGen>(self, count);
+    return LazySequence(Container<T>(), gen);
+}
+
+template<typename T, template<typename> class Container>
+LazySequence<T, Container> LazySequence<T, Container>::InsertAt(T item, size_t index) const {
+    struct InsertGen : Generator<T> {
+        std::shared_ptr<LazySequence<T, Container>> seq;
+        size_t idx;
+        T val;
+        size_t pos = 0;
+        bool inserted = false;
+        InsertGen(std::shared_ptr<LazySequence<T, Container>> s, size_t i, T v) : seq(s), idx(i), val(v) {}
+        T GetNext() override {
+            if (!inserted && pos == idx) {
+                inserted = true;
+                ++pos;
+                return val;
+            }
+            try {
+                return seq->Get(Cardinal(pos++));
+            } catch (const OutOfRangeException&) {
+                throw OutOfRangeException("InsertGen: нет элементов");
+            }
+        }
+        bool HasNext() const override {
+            if (!inserted && pos <= idx) return true;
+            return seq->GetSizeSequence().IsInfiniteNumber() || pos < seq->GetSizeSequence().GetSize();
+        }
+        Cardinal GetPotentialSize() const override {
+            if (seq->GetSizeSequence().IsInfiniteNumber()) return Cardinal::Omega();
+            return Cardinal(seq->GetSizeSequence().GetSize() + 1);
+        }
+        Generator<T>* Clone() const override { return new InsertGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto gen = std::make_shared<InsertGen>(self, index, item);
+    return LazySequence(Container<T>(), gen);
+}
+
+template<typename T, template<typename> class Container>
+template<typename U>
+LazySequence<U, Container> LazySequence<T, Container>::Map(std::function<U(const T&)> func) const {
+    struct MapGen : Generator<U> {
+        std::shared_ptr<LazySequence<T, Container>> source;
+        std::function<U(const T&)> f;
+        size_t pos = 0;
+        MapGen(std::shared_ptr<LazySequence<T, Container>> s, std::function<U(const T&)> func) : source(s), f(func) {}
+        U GetNext() override {
+            return f(source->Get(Cardinal(pos++)));
+        }
+        bool HasNext() const override {
+            return source->GetSizeSequence().IsInfiniteNumber() || pos < source->GetSizeSequence().GetSize();
+        }
+        Cardinal GetPotentialSize() const override { return source->GetSizeSequence(); }
+        Generator<U>* Clone() const override { return new MapGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto gen = std::make_shared<MapGen>(self, func);
+    return LazySequence<U, Container>(Container<U>(), gen);
+}
+
+template<typename T, template<typename> class Container>
+LazySequence<T, Container> LazySequence<T, Container>::Where(std::function<bool(const T&)> pred) const {
+    struct WhereGen : Generator<T> {
+        std::shared_ptr<LazySequence<T, Container>> source;
+        std::function<bool(const T&)> p;
+        size_t pos = 0;
+        WhereGen(std::shared_ptr<LazySequence<T, Container>> s, std::function<bool(const T&)> pred) : source(s), p(pred) {}
+        T GetNext() override {
+            while (true) {
+                T val = source->Get(Cardinal(pos++));
+                if (p(val)) return val;
+            }
+        }
+        bool HasNext() const override { return true; }
+        Cardinal GetPotentialSize() const override { return Cardinal::Omega(); }
+        Generator<T>* Clone() const override { return new WhereGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto gen = std::make_shared<WhereGen>(self, pred);
+    return LazySequence(Container<T>(), gen);
+}
+
+template<typename T, template<typename> class Container>
+template<typename U>
+U LazySequence<T, Container>::Reduce(std::function<U(const U&, const T&)> func, U init) const {
+    U acc = init;
+    for (size_t i = 0; ; ++i) {
+        try { acc = func(acc, const_cast<LazySequence*>(this)->Get(Cardinal(i))); }
+        catch (const OutOfRangeException&) { break; }
+    }
+    return acc;
+}
+
+template<typename T, template<typename> class Container>
+template<typename U>
+LazySequence<std::pair<T, U>, Container> LazySequence<T, Container>::Zip(const LazySequence<U, Container>& other) const {
+    struct ZipGen : Generator<std::pair<T, U>> {
+        std::shared_ptr<LazySequence<T, Container>> first;
+        std::shared_ptr<LazySequence<U, Container>> second;
+        size_t pos = 0;
+        ZipGen(std::shared_ptr<LazySequence<T, Container>> f, std::shared_ptr<LazySequence<U, Container>> s) : first(f), second(s) {}
+        std::pair<T, U> GetNext() override {
+            return {first->Get(Cardinal(pos)), second->Get(Cardinal(pos++))};
+        }
+        bool HasNext() const override {
+            return first->GetSizeSequence().IsInfiniteNumber() && second->GetSizeSequence().IsInfiniteNumber() ||
+                   (pos < first->GetSizeSequence().GetSize() && pos < second->GetSizeSequence().GetSize());
+        }
+        Cardinal GetPotentialSize() const override {
+            auto s1 = first->GetSizeSequence();
+            auto s2 = second->GetSizeSequence();
+            if (s1.IsInfiniteNumber() || s2.IsInfiniteNumber()) return Cardinal::Omega();
+            return Cardinal(std::min(s1.GetSize(), s2.GetSize()));
+        }
+        Generator<std::pair<T, U>>* Clone() const override { return new ZipGen(*this); }
+    };
+    auto self = std::make_shared<LazySequence<T, Container>>(*this);
+    auto otherPtr = std::make_shared<LazySequence<U, Container>>(other);
+    auto gen = std::make_shared<ZipGen>(self, otherPtr);
+    return LazySequence<std::pair<T, U>, Container>(Container<std::pair<T, U>>(), gen);
+}

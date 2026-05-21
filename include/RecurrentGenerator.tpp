@@ -1,10 +1,7 @@
-#include "RecurrentGenerator.hpp"
 template<typename T, template<typename> class Container>
-RecurrentGenerator<T, Container>::RecurrentGenerator(std::function<T(const Container<T>&)> f,
+RecurrentGenerator<T, Container>::RecurrentGenerator(std::function<T(const Container<T>&)> func,
                                                      const Container<T>& startCache)
-    : func(std::move(f)), cache(startCache) {
-    nextIndex = cache.GetLength();
-}
+    : func(func), cache(startCache), nextIndex(startCache.GetLength()) {}
 
 template<typename T, template<typename> class Container>
 T RecurrentGenerator<T, Container>::GetNext() {
@@ -19,7 +16,7 @@ T RecurrentGenerator<T, Container>::GetNext() {
 
 template<typename T, template<typename> class Container>
 bool RecurrentGenerator<T, Container>::HasNext() const {
-    return infinite;
+    return true;
 }
 
 template<typename T, template<typename> class Container>
@@ -31,6 +28,5 @@ template<typename T, template<typename> class Container>
 Generator<T>* RecurrentGenerator<T, Container>::Clone() const {
     auto* clone = new RecurrentGenerator<T, Container>(func, cache);
     clone->nextIndex = nextIndex;
-    clone->infinite = infinite;
     return clone;
 }

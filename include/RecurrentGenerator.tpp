@@ -1,16 +1,14 @@
 template<typename T, template<typename> class Container>
-RecurrentGenerator<T, Container>::RecurrentGenerator(std::function<T(const Container<T>&)> func,
-                                                     const Container<T>& startCache)
-    : func(func), cache(startCache), nextIndex(startCache.GetLength()) {}
+RecurrentGenerator<T, Container>::RecurrentGenerator(std::function<T(const Container<T>&)> func, const Container<T>& start)
+    : m_func(func), m_cache(start), m_idx(start.GetLength()) {}
 
 template<typename T, template<typename> class Container>
 T RecurrentGenerator<T, Container>::GetNext() {
-    if (nextIndex < cache.GetLength()) {
-        return cache.Get(nextIndex++);
-    }
-    T val = func(cache);
-    cache.Append(val);
-    nextIndex++;
+    if (m_idx < m_cache.GetLength())
+        return m_cache.Get(m_idx++);
+    T val = m_func(m_cache);
+    m_cache.Append(val);
+    m_idx++;
     return val;
 }
 
@@ -26,7 +24,7 @@ Cardinal RecurrentGenerator<T, Container>::GetPotentialSize() const {
 
 template<typename T, template<typename> class Container>
 Generator<T>* RecurrentGenerator<T, Container>::Clone() const {
-    auto* clone = new RecurrentGenerator<T, Container>(func, cache);
-    clone->nextIndex = nextIndex;
+    auto* clone = new RecurrentGenerator<T, Container>(m_func, m_cache);
+    clone->m_idx = m_idx;
     return clone;
 }

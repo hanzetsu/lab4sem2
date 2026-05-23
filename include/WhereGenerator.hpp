@@ -12,12 +12,11 @@ public:
     bool HasNext() const override;
     Cardinal GetPotentialSize() const override;
     Generator<T>* Clone() const override;
-
 private:
-    std::shared_ptr<Generator<T>> source;
-    std::function<bool(const T&)> pred;
-    mutable std::optional<T> cachedNext;
-    mutable bool hasCached = false;
+    std::shared_ptr<Generator<T>> m_src;
+    std::function<bool(const T&)> m_pred;
+    mutable std::optional<T> m_cache;
+    mutable bool m_cached = false;
     void findNext() const;
 };
 

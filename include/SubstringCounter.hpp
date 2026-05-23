@@ -1,21 +1,23 @@
 #pragma once
 #include "IStream.hpp"
 #include <string>
-#include <vector>
 #include <memory>
 #include "LazySequence.hpp"
 #include "LazySequenceStream.hpp"
+#include "MutableArraySequence.hpp"
+
 class SubstringCounter {
 public:
-    static std::vector<int> buildPrefixFunction(const std::string& pattern) {
+    static MutableArraySequence<int> buildPrefixFunction(const std::string& pattern) {
         int m = pattern.size();
-        std::vector<int> pi(m, 0);
+        MutableArraySequence<int> pi;
+        for (int i = 0; i < m; ++i) pi.Append(0);
         for (int i = 1, j = 0; i < m; ++i) {
             while (j > 0 && pattern[i] != pattern[j])
-                j = pi[j - 1];
+                j = pi.Get(j - 1);
             if (pattern[i] == pattern[j])
                 ++j;
-            pi[i] = j;
+            pi.Set(i, j);
         }
         return pi;
     }
@@ -28,19 +30,20 @@ public:
         while (!stream->IsEnd()) {
             char c = stream->Read();
             while (j > 0 && c != pattern[j])
-                j = pi[j - 1];
+                j = pi.Get(j - 1);
             if (c == pattern[j]) {
                 ++j;
                 if (j == (int)pattern.size()) {
                     ++count;
-                    j = pi[j - 1];
+                    j = pi.Get(j - 1);
                 }
             }
         }
         return count;
     }
+
     static size_t countInLazySequence(const LazySequence<char, MutableArraySequence>& seq, const std::string& pattern) {
-    auto stream = std::make_shared<LazySequenceStream<char>>(seq);
-    return countInStream(stream, pattern);
-}
+        auto stream = std::make_shared<LazySequenceStream<char>>(seq);
+        return countInStream(stream, pattern);
+    }
 };

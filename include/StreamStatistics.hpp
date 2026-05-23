@@ -1,11 +1,23 @@
 #pragma once
 #include "IStream.hpp"
-#include <vector>
-#include <algorithm>
+#include "MutableArraySequence.hpp"
 #include <cmath>
 #include <random>
 #include <memory>
 #include <QMetaType>
+
+template<typename T>
+static void insertionSort(MutableArraySequence<T>& arr) {
+    for (size_t i = 1; i < arr.GetLength(); ++i) {
+        T key = arr.Get(i);
+        int j = i - 1;
+        while (j >= 0 && arr.Get(j) > key) {
+            arr.Set(j + 1, arr.Get(j));
+            --j;
+        }
+        arr.Set(j + 1, key);
+    }
+}
 
 class NaturalNumberStream : public IStream<int> {
 private:
@@ -61,7 +73,7 @@ public:
         double min = INFINITY;
         double max = -INFINITY;
         size_t windowSize = 100;
-        std::vector<double> window;
+        MutableArraySequence<double> window;
         size_t windowPos = 0;
         bool windowFull = false;
 
@@ -74,11 +86,11 @@ public:
             m2 += delta * delta2;
             if (val < min) min = val;
             if (val > max) max = val;
-            if (window.size() < windowSize) {
-                window.push_back(val);
+            if (window.GetLength() < windowSize) {
+                window.Append(val);
             } else {
                 if (!windowFull) windowFull = true;
-                window[windowPos] = val;
+                window.Set(windowPos, val);
             }
             windowPos = (windowPos + 1) % windowSize;
         }
@@ -93,14 +105,14 @@ public:
         }
 
         double getMedian() {
-            if (window.empty()) return 0.0;
-            std::vector<double> sorted = window;
-            std::sort(sorted.begin(), sorted.end());
-            size_t m = sorted.size();
+            if (window.GetLength() == 0) return 0.0;
+            MutableArraySequence<double> sorted = window;
+            insertionSort(sorted);
+            size_t m = sorted.GetLength();
             if (m % 2 == 0)
-                return (sorted[m/2 - 1] + sorted[m/2]) / 2.0;
+                return (sorted.Get(m/2 - 1) + sorted.Get(m/2)) / 2.0;
             else
-                return sorted[m/2];
+                return sorted.Get(m/2);
         }
 
         Result getResult() const {
@@ -118,27 +130,30 @@ public:
 
     static Result ComputeFinite(std::shared_ptr<IStream<int>> stream) {
         Result res;
-        std::vector<double> values;
+        MutableArraySequence<double> values;
         while (!stream->IsEnd()) {
             double val = static_cast<double>(stream->Read());
             res.sum += val;
             res.count++;
             if (val < res.min) res.min = val;
             if (val > res.max) res.max = val;
-            values.push_back(val);
+            values.Append(val);
         }
         if (res.count == 0) return res;
         res.mean = res.sum / res.count;
         double sq = 0.0;
-        for (double v : values) sq += (v - res.mean) * (v - res.mean);
+        for (size_t i = 0; i < values.GetLength(); ++i) {
+            double v = values.Get(i);
+            sq += (v - res.mean) * (v - res.mean);
+        }
         res.variance = sq / res.count;
         res.stddev = std::sqrt(res.variance);
-        std::sort(values.begin(), values.end());
-        size_t m = values.size();
+        insertionSort(values);
+        size_t m = values.GetLength();
         if (m % 2 == 0)
-            res.median = (values[m/2 - 1] + values[m/2]) / 2.0;
+            res.median = (values.Get(m/2 - 1) + values.Get(m/2)) / 2.0;
         else
-            res.median = values[m/2];
+            res.median = values.Get(m/2);
         return res;
     }
 };

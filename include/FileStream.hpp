@@ -22,7 +22,7 @@ private:
     std::function<T(const std::string&)> deserialize;
     mutable std::ifstream file;
     size_t pos = 0;
-    bool eof = false;
+    mutable bool eof = false;
     void openFile() const;
 };
 

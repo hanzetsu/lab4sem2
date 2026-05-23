@@ -290,12 +290,9 @@ int main()
                     std::cout << "Reduce на бесконечной последовательности невозможен.\n";
                     break;
                 }
-                int init;
-                std::cout << "Введите начальное значение: ";
-                std::cin >> init;
                 std::cin.ignore();
                 int sum = current->Reduce<int>([](int a, int b)
-                                               { return a + b; }, init);
+                                               { return a + b; }, 0);
                 std::cout << "Сумма = " << sum << std::endl;
                 printSequence(*current);
                 break;

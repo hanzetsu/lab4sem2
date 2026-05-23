@@ -54,16 +54,17 @@ add_executable(Lab4 ${SOURCES} ${HEADERS})
 set_target_properties(Lab4 PROPERTIES WIN32_EXECUTABLE OFF)
 target_link_libraries(Lab4 Qt6::Widgets)
 
-if(WIN32)
-    target_link_options(Lab4 PRIVATE -mconsole)
-endif()
-
-enable_testing()
 
 add_executable(test_manual tests/test_manual.cpp)
 target_link_libraries(test_manual ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(test_manual PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(test_manual PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../lab2sem2/include)
+
+if(WIN32)
+    target_link_options(Lab4 PRIVATE -mconsole)
+endif()
+
+enable_testing()
 
 add_executable(test_lazysequence tests/test_lazysequence.cpp)
 target_link_libraries(test_lazysequence)

@@ -60,12 +60,12 @@ void SubstringWorker::run() {
                     char c = stream->Read();
                     ++processed;
                     while (j > 0 && c != m_pattern.toStdString()[j])
-                        j = pi[j - 1];
+                        j = pi.Get(j - 1);
                     if (c == m_pattern.toStdString()[j]) {
                         ++j;
                         if (j == (int)m_pattern.size()) {
                             ++count;
-                            j = pi[j - 1];
+                            j = pi.Get(j - 1);
                         }
                     }
                     if (processed % 1000 == 0) {

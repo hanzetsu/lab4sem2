@@ -1,8 +1,8 @@
 #pragma once
 #include "Generator.hpp"
+#include "Option.hpp"
 #include <functional>
 #include <memory>
-#include <optional>
 
 template<typename T>
 class WhereGenerator : public Generator<T> {
@@ -15,7 +15,7 @@ public:
 private:
     std::shared_ptr<Generator<T>> m_src;
     std::function<bool(const T&)> m_pred;
-    mutable std::optional<T> m_cache;
+    mutable Option<T> m_cache;
     mutable bool m_cached = false;
     void findNext() const;
 };

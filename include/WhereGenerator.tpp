@@ -7,22 +7,22 @@ void WhereGenerator<T>::findNext() const {
     while (m_src && m_src->HasNext()) {
         T val = m_src->GetNext();
         if (m_pred(val)) {
-            m_cache = val;
+            m_cache = Option<T>(val);
             m_cached = true;
             return;
         }
     }
     m_cached = false;
-    m_cache.reset();
+    m_cache = Option<T>();
 }
 
 template<typename T>
 T WhereGenerator<T>::GetNext() {
     if (!m_cached) findNext();
     if (!m_cached) throw OutOfRangeException("WhereGenerator: end");
-    T res = *m_cache;
+    T res = m_cache.GetValue();
     m_cached = false;
-    m_cache.reset();
+    m_cache = Option<T>();
     return res;
 }
 

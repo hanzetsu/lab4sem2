@@ -10,11 +10,10 @@ public:
     bool HasNext() const override;
     Cardinal GetPotentialSize() const override;
     Generator<T>* Clone() const override;
-
 private:
-    std::shared_ptr<Generator<T>> first;
-    std::shared_ptr<Generator<T>> second;
-    bool firstFinished = false;
+    std::shared_ptr<Generator<T>> m_first;
+    std::shared_ptr<Generator<T>> m_second;
+    bool m_firstDone = false;
 };
 
 #include "CompositeGenerator.tpp"

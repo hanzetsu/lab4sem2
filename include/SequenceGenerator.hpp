@@ -5,7 +5,7 @@
 template<typename T, template<typename> class Container>
 class SequenceGenerator : public Generator<T> {
 public:
-    explicit SequenceGenerator(std::shared_ptr<Container<T>> seq);
+     SequenceGenerator(std::shared_ptr<Container<T>> seq);
     T GetNext() override;
     bool HasNext() const override;
     Cardinal GetPotentialSize() const override;

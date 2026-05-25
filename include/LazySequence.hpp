@@ -10,7 +10,7 @@ template<typename T, template<typename> class Container = MutableArraySequence>
 class LazySequence {
 public:
     LazySequence();
-    explicit LazySequence(const Container<T>& cache);
+     LazySequence(const Container<T>& cache);
     LazySequence(const Container<T>& cache, std::shared_ptr<Generator<T>> gen);
     LazySequence(T* items, size_t count);
     LazySequence(std::initializer_list<T> list);

@@ -30,7 +30,7 @@ private:
 class StatisticsWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit StatisticsWidget(QWidget *parent = nullptr);
+     StatisticsWidget(QWidget *parent = nullptr);
     ~StatisticsWidget();
 private slots:
     void onStartStop();

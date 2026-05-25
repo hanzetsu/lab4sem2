@@ -6,7 +6,7 @@
 
 class StringStream : public IStream<char> {
 public:
-    explicit StringStream(const std::string& str);
+     StringStream(const std::string& str);
     char Read() override;
     bool IsEnd() const override;
     size_t GetPosition() const override { return pos; }

@@ -8,8 +8,8 @@
 template<typename T>
 class ArrayStream : public IStream<T> {
 public:
-    explicit ArrayStream(std::shared_ptr<Sequence<T>> seq);
-    explicit ArrayStream(const Sequence<T>& seq);
+     ArrayStream(std::shared_ptr<Sequence<T>> seq);
+     ArrayStream(const Sequence<T>& seq);
     T Read() override;
     bool IsEnd() const override;
     size_t GetPosition() const override { return pos; }

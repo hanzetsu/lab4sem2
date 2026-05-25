@@ -7,11 +7,11 @@ private:
     size_t finite = 0;
     bool infinite = false;
 
-    explicit Cardinal(size_t val, bool inf) noexcept : finite(val), infinite(inf) {}
+     Cardinal(size_t val, bool inf) noexcept : finite(val), infinite(inf) {}
 
 public:
     Cardinal() noexcept : Cardinal(0, false) {}
-    explicit Cardinal(size_t val) noexcept : Cardinal(val, false) {}
+     Cardinal(size_t val) noexcept : Cardinal(val, false) {}
 
     static Cardinal Omega() noexcept { return Cardinal(0, true); }
     static Cardinal Finite(size_t val) noexcept { return Cardinal(val, false); }

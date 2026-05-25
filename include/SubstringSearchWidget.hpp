@@ -32,7 +32,7 @@ private:
 class SubstringSearchWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit SubstringSearchWidget(QWidget *parent = nullptr);
+     SubstringSearchWidget(QWidget *parent = nullptr);
     ~SubstringSearchWidget();
 
 private slots:

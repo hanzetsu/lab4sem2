@@ -7,7 +7,7 @@
 template<typename T>
 class LazySequenceStream : public IStream<T> {
 public:
-    explicit LazySequenceStream(const LazySequence<T, MutableArraySequence>& seq)
+     LazySequenceStream(const LazySequence<T, MutableArraySequence>& seq)
         : m_sequence(std::make_shared<LazySequence<T, MutableArraySequence>>(seq)),
           m_pos(0),
           m_length(m_sequence->GetSizeSequence()) {}
